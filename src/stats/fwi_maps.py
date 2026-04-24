@@ -60,18 +60,51 @@ def plot_fwi_map(df_date, ax, col="fwi-daily-proj",
 # 4. GRILLE MULTI-DATES
 # =====================================================================
 
+def _auto_text_color(bg_color):
+    """Renvoie 'white' si le fond est sombre, 'black' sinon."""
+    import matplotlib.colors as mcolors
+    r, g, b = mcolors.to_rgb(bg_color)
+    # luminance perçue (formule standard)
+    luminance = 0.299 * r + 0.587 * g + 0.114 * b
+    return "white" if luminance < 0.5 else "black"
+
+
+def _style_axis_text(ax, color):
+    """Met tout le texte de l'axe (ticks, labels, titre) dans une couleur donnée."""
+    ax.tick_params(colors=color, which="both")
+    ax.xaxis.label.set_color(color)
+    ax.yaxis.label.set_color(color)
+    ax.title.set_color(color)
+    for spine in ax.spines.values():
+        spine.set_edgecolor(color)
+
+
 def plot_monthly_grid(df, dates, col="fwi-daily-proj",
                       cmap="YlOrRd", nrows=3, ncols=4,
-                      figsize=(18, 12), shared_scale=True, title=None, facecolor="#f5f5f5", 
-                      axes_facecolor=None):
+                      figsize=(18, 12), shared_scale=True, title=None,
+                      facecolor="#f5f5f5", axes_facecolor=None,
+                      fg=None, markersize=1.5):
     """
     Trace une grille de cartes (une par date).
-    shared_scale=True -> même échelle de couleur pour toutes les cartes
-                         (essentiel pour comparer visuellement les mois).
+
+    Paramètres
+    ----------
+    facecolor : str
+        Couleur de fond de la figure.
+    axes_facecolor : str or None
+        Couleur de fond de chaque carte. Si None, hérite de facecolor.
+    fg : str or None
+        Couleur du texte (titres, ticks, échelles, colorbars).
+        Si None, choisie automatiquement selon la luminance du fond :
+        blanc sur fond sombre, noir sur fond clair.
+    shared_scale : bool
+        True -> même échelle de couleur pour toutes les cartes.
     """
     if axes_facecolor is None:
         axes_facecolor = facecolor
-    # bornes communes éventuelles
+    if fg is None:
+        fg = _auto_text_color(facecolor)
+
     vmin = vmax = None
     if shared_scale:
         subset = df[df["time"].isin(pd.to_datetime(dates))][col]
@@ -84,16 +117,26 @@ def plot_monthly_grid(df, dates, col="fwi-daily-proj",
         axes[i].set_facecolor(axes_facecolor)
         temp = df[df["time"] == pd.to_datetime(date)]
         plot_fwi_map(temp, ax=axes[i], col=col,
-                     cmap=cmap, vmin=vmin, vmax=vmax)
-        axes[i].set_title(str(date)[:10])
+                     cmap=cmap, vmin=vmin, vmax=vmax, markersize=markersize)
+        axes[i].set_title(str(date)[:10], color=fg)
+        _style_axis_text(axes[i], fg)          
 
-    # cacher les axes vides si la grille est plus grande que le nb de dates
+    # cacher les axes vides
     for j in range(len(dates), len(axes)):
         axes[j].set_facecolor(axes_facecolor)
         axes[j].axis("off")
 
+    map_axes = set(axes)
+    for cax in fig.axes:
+        if cax not in map_axes:                
+            cax.tick_params(colors=fg)
+            cax.yaxis.label.set_color(fg)
+            for spine in cax.spines.values():
+                spine.set_edgecolor(fg)
+
     if title:
-        fig.suptitle(title, fontsize=16, y=1.02)
+        fig.suptitle(title, fontsize=16, y=1.02, color=fg)
+
     plt.tight_layout()
     plt.show()
     return fig
