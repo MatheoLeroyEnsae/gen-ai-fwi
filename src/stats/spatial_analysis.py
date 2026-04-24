@@ -286,3 +286,76 @@ def plot_significance_map(gdf, col="sig_class", ax=None, title="Significativité
     ax.grid(True, color=fg, alpha=0.10, linewidth=0.3, linestyle="--")
     ax.set_axisbelow(True)
     return ax
+
+
+# =====================================================================
+# 1. CALCUL DES Gi* POUR PLUSIEURS k
+# =====================================================================
+
+
+def compute_gi_multi_k(gdf, col="mean", k_values=(4, 8, 16, 32)):
+    """
+    Calcule Gi* pour plusieurs valeurs de k.
+    Retourne un dict {k: GeoDataFrame avec colonne 'gi_z'}.
+    """
+    return {k: getis_ord_gi(gdf, col=col, k=k) for k in k_values}
+
+
+def global_zrange(gdfs_dict, col="gi_z", symmetric=True):
+    """
+    Renvoie (vmin, vmax) communs à toutes les cartes.
+    symmetric=True -> centré sur 0 (recommandé pour une cmap divergente).
+    """
+    all_vals = np.concatenate([g[col].values for g in gdfs_dict.values()])
+    if symmetric:
+        vmax = np.nanmax(np.abs(all_vals))
+        return -vmax, vmax
+    return np.nanmin(all_vals), np.nanmax(all_vals)
+
+
+# =====================================================================
+# 2. AFFICHAGE AVEC COLORBAR PARTAGÉE
+# =====================================================================
+
+
+def plot_gi_grid_shared(
+        gdfs_dict, vmin, vmax, cmap="RdBu_r", facecolor="#1e1e1e", fg="white", 
+        markersize=7, figsize=(14, 12)):
+    """
+    Grille 2x2 de cartes Gi* avec une seule colorbar partagée à droite.
+    """
+    fig, axes = plt.subplots(2, 2, figsize=figsize, facecolor=facecolor)
+    axes = axes.flatten()
+
+    # boucle sur les k, sans légende individuelle
+    for ax, (k, gdf) in zip(axes, gdfs_dict.items()):
+        ax.set_facecolor(facecolor)
+        gdf.plot(ax=ax, column="gi_z", cmap=cmap,
+                 vmin=vmin, vmax=vmax,
+                 markersize=markersize, legend=False)
+
+        ax.set_title(f"Gi* — k = {k} voisins", color=fg, fontsize=12)
+        ax.tick_params(colors=fg, length=3, width=0.5)
+        for spine in ax.spines.values():
+            spine.set_edgecolor(fg); spine.set_alpha(0.25); spine.set_linewidth(0.5)
+        ax.grid(True, color=fg, alpha=0.10, linewidth=0.3, linestyle="--")
+        ax.set_axisbelow(True)
+
+    # --- colorbar partagée ---
+    # on réserve de l'espace à droite et on y place la colorbar
+    fig.subplots_adjust(right=0.88, wspace=0.15, hspace=0.25)
+    cax = fig.add_axes([0.90, 0.15, 0.02, 0.7])   # [left, bottom, width, height]
+    sm = plt.cm.ScalarMappable(cmap=cmap,
+                               norm=plt.Normalize(vmin=vmin, vmax=vmax))
+    sm.set_array([])
+    cbar = fig.colorbar(sm, cax=cax)
+    cbar.set_label("Gi* (z-score)", color=fg, fontsize=11)
+    cbar.ax.tick_params(colors=fg, length=3, width=0.5)
+    for spine in cbar.ax.spines.values():
+        spine.set_edgecolor(fg); spine.set_alpha(0.25); spine.set_linewidth(0.5)
+
+    fig.suptitle("Sensibilité des hot spots Gi* au nombre de voisins k",
+                 color=fg, fontsize=15, y=0.995)
+    return fig
+
+
