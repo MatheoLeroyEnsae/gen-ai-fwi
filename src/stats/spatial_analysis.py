@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import geopandas as gpd
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 from scipy import stats
 
 
@@ -59,6 +60,7 @@ def pixel_stats(df, value_col="fwi-daily-proj", group_cols=("rlat", "rlon")):
                   median=(value_col, "median"),
                   std=(value_col, "std"),
                   q95=(value_col, lambda s: s.quantile(0.95)),
+                  q05=(value_col, lambda s: s.quantile(0.05)),
                   max=(value_col, "max"),
                   lon=("lon", "first"),
                   lat=("lat", "first"))
@@ -211,4 +213,76 @@ def plot_map(gdf, col, title, ax=None, cmap="YlOrRd",
         if cax is not ax:
             cax.tick_params(colors=fg)
             cax.yaxis.label.set_color(fg)
+    return ax
+
+
+def classify_pvalue(pvalues):
+    """
+    Transforme une série de p-values en 4 classes de significativité.
+
+    Classes
+    -------
+    1 : p >= 0.10   -> H0 non rejeté (test rejeté au seuil 10%)
+    2 : 0.05 <= p < 0.10 -> significatif au seuil 10% seulement
+    3 : 0.01 <= p < 0.05 -> significatif au seuil 5% mais pas 1%
+    4 : p < 0.01    -> significatif au seuil 1% (très significatif)
+    """
+    p = np.asarray(pvalues, dtype=float)
+    classes = np.full_like(p, np.nan, dtype=float)
+    classes[p >= 0.10]                  = 1
+    classes[(p >= 0.05) & (p < 0.10)]   = 2
+    classes[(p >= 0.01) & (p < 0.05)]   = 3
+    classes[p < 0.01]                   = 4
+    return classes
+
+
+# =====================================================================
+# Visualisation dédiée (colormap discrète + légende explicite)
+# =====================================================================
+
+SIG_COLORS = {
+    1: "#3b3b3b",   # gris foncé  - non significatif (H0 non rejeté)
+    2: "#fcae91",   # rouge clair - seuil 10%
+    3: "#de2d26",   # rouge moyen - seuil 5%
+    4: "#67000d",   # rouge foncé - seuil 1% (très significatif)
+}
+
+SIG_LABELS = {
+    1: "p ≥ 0.10  (non significatif)",
+    2: "0.05 ≤ p < 0.10  (10%)",
+    3: "0.01 ≤ p < 0.05  (5%)",
+    4: "p < 0.01  (1%)",
+}
+
+
+def plot_significance_map(gdf, col="sig_class", ax=None, title="Significativité",
+                          facecolor="#1e1e1e", fg="white", markersize=3):
+    """Carte avec 4 couleurs discrètes selon la classe de significativité."""
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(8, 6), facecolor=facecolor)
+    ax.set_facecolor(facecolor)
+
+    # colormap discrète à partir du dictionnaire
+    cmap = mcolors.ListedColormap([SIG_COLORS[k] for k in sorted(SIG_COLORS)])
+    bounds = [0.5, 1.5, 2.5, 3.5, 4.5]
+    norm = mcolors.BoundaryNorm(bounds, cmap.N)
+
+    gdf.plot(ax=ax, column=col, cmap=cmap, norm=norm,
+             markersize=markersize, legend=False)
+
+    # Légende manuelle (plus lisible qu'une colorbar discrète)
+    handles = [plt.Line2D([0], [0], marker="o", color="none",
+                          markerfacecolor=SIG_COLORS[k],
+                          markersize=10, label=SIG_LABELS[k])
+               for k in sorted(SIG_COLORS)]
+    leg = ax.legend(handles=handles, loc="lower left", fontsize=9,
+                    facecolor=facecolor, edgecolor=fg, labelcolor=fg,
+                    framealpha=0.8)
+
+    ax.set_title(title, color=fg, fontsize=12)
+    ax.tick_params(colors=fg, length=3, width=0.5)
+    for spine in ax.spines.values():
+        spine.set_edgecolor(fg); spine.set_alpha(0.25); spine.set_linewidth(0.5)
+    ax.grid(True, color=fg, alpha=0.10, linewidth=0.3, linestyle="--")
+    ax.set_axisbelow(True)
     return ax
