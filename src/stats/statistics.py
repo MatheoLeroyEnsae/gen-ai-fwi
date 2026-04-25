@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import seaborn as sns
 
-path = "/home/onyxia/work/gen-ai-fwi"
+path = "/home/onyxia/work/gen-ai-fwi/output2"
 
 # =====================================================================
 # 0. CONFIGURATION
