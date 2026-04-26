@@ -20,7 +20,8 @@ gen-ai-fwi/
 └── run/                  # Images générées
 └── src/
     ├── models/validation.ipynb.py # CNN to predict seasonality
-    ├── stats/ # modules for plotting descriptive statistics 
+    ├── stats/ # modules for plotting descriptive statistics
+└── output/ # Enregistre les statistiques descriptives
 ```
 
 ## Notebooks principaux
