@@ -11,8 +11,7 @@ Deux orientations de la matrice sont supportées :
 - **S-mode** : lignes = temps, colonnes = pixels.
   Les composantes principales (EOF) sont des **patterns spatiaux** ;
   les scores (PC) sont des **séries temporelles** qui donnent le poids
-  de chaque pattern à chaque date. C'est l'orientation standard en
-  climatologie.
+  de chaque pattern à chaque date. 
 
 - **T-mode** : lignes = pixels, colonnes = temps.
   Les composantes sont alors des **profils temporels** types ; les
@@ -70,8 +69,7 @@ def aggregate_temporal(df: pd.DataFrame,
     """Agrège le DataFrame long sur une fréquence temporelle donnée.
 
     Indispensable pour le T-mode : avec ~13 000 jours, on aurait plus
-    de "variables temporelles" que d'observations (pixels), ce qui rend
-    la PCA mal posée et capte essentiellement du bruit haute fréquence.
+    de "variables temporelles" que d'observations (pixels)
 
     Parameters
     ----------
@@ -155,7 +153,6 @@ def clean_matrix(mat: pd.DataFrame,
 
     - supprime les colonnes (pixels) qui ont trop de NaN
     - remplit les NaN restants par la moyenne de la colonne
-      (sklearn.PCA n'accepte pas les NaN)
     """
     nan_frac = mat.isna().mean(axis=0)
     keep = nan_frac[nan_frac <= max_nan_frac_col].index
