@@ -30,9 +30,10 @@ gen-ai-fwi/
 | `00.data_loading` | Chargement des données .nc |
 | `01.0.data_spain_france` | Préparation données spatiales Espagne - France |
 | `01.1.data_images` | Création des images 28x28 |
-| `01.2.images_loading_28_28` | Chargement images |
-| `01.2.images_loading_28_28_modified` | DCGAN sur images normalisées |
-| `01.2.images_loading_28_28_normalized_light` | DCGAN léger (latent_dim=64) |
+| `01.2.DCGAN | DCGAN |
+| `01.2.images_loading_28_28_modified` | Premiers tests DCGAN |
+| `01.2.images_loading_28_28_normalized_light` | Premiers tests DCGAN  |
+
 | `03_pca_analysis` | Analyse ACP |
 | `04_VAE` | Variational Autoencoder |
 | `04-WGANGP-FWI` | WGAN-GP |
