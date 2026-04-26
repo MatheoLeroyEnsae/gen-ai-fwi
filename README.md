@@ -16,24 +16,25 @@ gen-ai-fwi/
 ├── notebooks/               # Jupyter notebooks
 ├── models/                # Modèles GAN/VAE
 │   ├── DCGAN.py          # DCGAN original
-│   ├── DCGAN_tuned.py   # DCGAN corrigé
-│   └── CGAN.py          # CGAN conditionnel (par mois)
 ├── callbacks/             # Callbacks TensorBoard/visualisation
 └── run/                  # Images générées
+└── src/
+    ├── models/validation.ipynb.py # CNN to predict seasonality
+    ├── stats/ # modules for plotting descriptive statistics 
 ```
 
 ## Notebooks principaux
 
 | Notebook | Description |
 |----------|------------|
-| `00.data_loading` | Chargement des données CSV |
-| `01.0.data_spain_france` | Préparation données spatiales |
+| `00.data_loading` | Chargement des données .nc |
+| `01.0.data_spain_france` | Préparation données spatiales Espagne - France |
 | `01.1.data_images` | Création des images 28x28 |
 | `01.2.images_loading_28_28` | Chargement images |
 | `01.2.images_loading_28_28_modified` | DCGAN sur images normalisées |
 | `01.2.images_loading_28_28_normalized_light` | DCGAN léger (latent_dim=64) |
-| `01.2.images_loading_28_28_cgan` | CGAN conditionnel par mois |
-| `03_VAE` | Variational Autoencoder |
+| `03_pca_analysis` | Analyse ACP |
+| `04_VAE` | Variational Autoencoder |
 | `04-WGANGP-FWI` | WGAN-GP |
 
 ## Exécution
@@ -49,12 +50,6 @@ jupyter notebook notebooks/01.2.images_loading_28_28_normalized_light.ipynb
 ```bash
 pip install -r requirements.txt
 ```
-
-## Modèles
-
-- **DCGAN** : Deep Convolutional GAN sur images 28x28
-- **DCGAN_tuned** : Version corrigée pour `predict()`
-- **CGAN** : Conditional GAN avec le mois en entrée
 
 ## Dépendances
 
